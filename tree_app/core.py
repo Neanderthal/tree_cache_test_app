@@ -1,4 +1,3 @@
-#%%
 import copy
 from typing import Dict, List, Set, Union, Optional
 from uuid import uuid4
@@ -83,32 +82,10 @@ class CacheStoredTree:
             self._cache[child]["deleted"] = True
             delete_stack.extend(cached_items_ids.intersection(self._cache[child]["children"]))
 
-    def get_tree_traversal(self):
-        # [{
-        #    "id":1,"text":"Root node","children":[
-        #        {"id":2,"text":"Child node 1"},
-        #        {"id":3,"text":"Child node 2"}
-        #    ]
-        # }]
-
-        cache_copy = copy.deepcopy(self._cache)
-
-        items_stack = []
-        items_stack.extend(CacheStoredTree.get_all_roots_for_storage(cache_copy))
-
-        while items_stack:
-            item_key, value = items_stack.pop().popitem()
-            if "children" in value:
-                children_ids = value["children"].copy()
-                value["children"].clear()
-                for child_id in children_ids:
-                    items_stack.append({child_id: cache_copy[child_id]})
-                    value["children"].append(cache_copy[child_id])
-                    del cache_copy[child_id]
-            value["id"] = item_key
-            value["text"] = value["data"]
-            del value["data"]
-
+    def get_copy_except_deleted(self) -> Dict[str, Dict]:
+        cache_copy = {
+            key: value for key, value in copy.deepcopy(self._cache).items() if not value.get("deleted", False)
+        }
         return cache_copy
 
     def pour_to_db(self) -> None:
@@ -119,7 +96,7 @@ class CacheStoredTree:
         self._database.reset()
 
     @staticmethod
-    def get_all_roots_for_storage(storage):
+    def get_all_roots_for_storage(storage: Dict) -> List[Dict]:
         cached_items_ids: Set = set(storage.keys())
         keys_set: Set = set(storage.keys())
 
@@ -133,7 +110,3 @@ class CacheStoredTree:
 
 db = DatabaseStoredTree(_DATA_STRUCT)
 cache = CacheStoredTree(db)
-
-cache._cache = _DATA_STRUCT
-cache.get_tree_traversal()
-# %%

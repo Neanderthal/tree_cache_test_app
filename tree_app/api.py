@@ -1,16 +1,17 @@
 from flask import request, abort
 from flask_smorest import Blueprint
 from typing import List, Dict
-from .core import cache, db
+from .core import CacheStoredTree, cache, db
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
 
 def get_leaf_for_jstree(child: Dict, child_id: str) -> Dict:
+    _, body = child.popitem()
     return {
         "id": child_id,
-        "text": child[child_id]["data"],
-        "children": bool(child[child_id]["children"]),
+        "text": body.get("data", ""),
+        "children": bool(body.get("children", False)),
     }
 
 
@@ -27,42 +28,38 @@ def main_tree() -> List:
         return data
     else:
         result = []
-        leaf = db.get_leaf(item_id)
-        for child_id in leaf[item_id]["children"]:
-            child = db.get_leaf("root")
+        _, body = db.get_leaf(item_id).popitem()
+        for child_id in body.get("children", []):
+            child = db.get_leaf(child_id)
             result.append(get_leaf_for_jstree(child, child_id))
         return result
 
 
-@api_bp.route("cache_tree/", methods=["GET"])
+@api_bp.route("cache_tree_full/", methods=["GET"])
 @api_bp.response(200)
-def cache_tree() -> List[Dict]:
-    item_id = request.args.get("id")
-    print(f"FUCK {id}")
+def cache_tree_full() -> List[Dict]:
+    cache_copy = cache.get_copy_except_deleted()
 
-    if not item_id or item_id == "#":
-        result = []
-        roots = cache.get_all_roots()
-        for root in roots:
-            root_id, value str = root.popitem
-            result.append(get_leaf_for_jstree(root, root_id))
-        print(result)
-        return result
-    else:
-        result = []
-        leaf = cache.get_leaf(item_id)
-        if leaf:
-            for child_id in leaf[item_id]["children"]:
-                child = cache.get_leaf(child_id)
-                if child:
-                    result.append(
-                        {
-                            "id": child_id,
-                            "text": child[child_id]["data"],
-                            "children": bool(child[child_id]["children"]),
-                        }
-                    )
-        return result
+    items_stack = []
+    items_stack.extend(CacheStoredTree.get_all_roots_for_storage(cache_copy))
+
+    while items_stack:
+        item_key, value = items_stack.pop().popitem()
+        if "children" in value:
+            children_ids = value["children"].copy()
+            value["children"].clear()
+
+            for child_id in children_ids:
+                if child_id in cache_copy:
+                    items_stack.append({child_id: cache_copy.get(child_id)})
+                    value["children"].append(cache_copy[child_id])
+                    del cache_copy[child_id]
+
+        value["id"] = item_key
+        value["text"] = value["data"]
+        del value["data"]
+
+    return list(cache_copy.values())
 
 
 @api_bp.route("move_node/", methods=["PUT"])

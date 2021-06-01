@@ -6,10 +6,7 @@ $(() => {
     $('#left_tree').jstree({
     core: {
       data: {
-        url: api_cache_tree_url,
-        data(node) {
-          return { id: node.id };
-        },
+        url: api_cache_full_tree_url,
       },
     },
   });
