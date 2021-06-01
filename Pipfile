@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+black = "*"
+isort = "*"
+flake8 = "*"
+flask = "*"
+flask-smorest = "*"
+auger-python = "*"
+uwsgi = "*"
+flake8-isort = "*"
+mypy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
