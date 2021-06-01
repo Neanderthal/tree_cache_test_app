@@ -28,6 +28,6 @@ def create_app() -> Flask:
     from tree_app.api import api_bp
 
     api = Api(app)
-    api.register_blueprint(api_bp, url_prefix=f"/api")
+    api.register_blueprint(api_bp, url_prefix="/api")
 
     return app

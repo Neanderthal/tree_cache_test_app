@@ -1,0 +1,13 @@
+{
+    "root": {"data": "Res", "children": ["2", "3", "9"]},
+    "2": {"data": "Child 1", "children": ["4"]},
+    "3": {"data": "Child 2", "children": ["5"]},
+    "4": {"data": "Child 4", "children": ["6"]},
+    "5": {"data": "Child 5", "children": []},
+    "6": {"data": "Child 6", "children": ["7", "8"]},
+    "7": {"data": "Child 7", "children": []},
+    "8": {"data": "Child 8", "children": []},
+    "9": {"data": "Child 9", "children": ["10", "11"]},
+    "10": {"data": "Child 10", "children": []},
+    "11": {"data": "Child 11", "children": []}
+}

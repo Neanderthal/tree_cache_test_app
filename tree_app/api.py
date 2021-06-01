@@ -1,6 +1,8 @@
-from flask import request, abort
+from typing import Dict, List
+
+from flask import abort, request
 from flask_smorest import Blueprint
-from typing import List, Dict
+
 from .core import CacheStoredTree, cache, db
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
@@ -38,6 +40,14 @@ def main_tree() -> List:
 @api_bp.route("cache_tree_full/", methods=["GET"])
 @api_bp.response(200)
 def cache_tree_full() -> List[Dict]:
+    """
+        This API method returns the cached tree
+        Here I convert the tree stored in a hash table to the common view tree
+        which jstree library uses to display the tree.
+        I use the list in a stack-like manner to do that.
+    Returns:
+        List[Dict]
+    """
     cache_copy = cache.get_copy_except_deleted()
 
     items_stack = []
@@ -111,7 +121,7 @@ def update_node() -> str:
 @api_bp.route("flush/", methods=["POST"])
 @api_bp.response(200)
 def flush() -> str:
-    cache.pour_to_db()
+    cache.flush_data_to_db()
     return "flushed"
 
 
