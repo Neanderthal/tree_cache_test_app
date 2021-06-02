@@ -7,7 +7,7 @@ Run this docker command in project main directory:
 `docker build -t test_app . && docker run -p 8080:8080 -it test_app`
  
 After that, you will have a running application on [http://localhost:8080/](http://localhost:8080/)
- 
+
 This code is not supposed as concurrent. So if you run it without docker make sure you don't use a server with several workers more than one (e.g. uwsgi does by default).
  
 The project consists of that files:
@@ -20,7 +20,9 @@ The project consists of that files:
 - templates/static/main.js - javascript code for the main page
  
 Also, there are a bunch of python developing related files.
- 
+
+The project gets its data from the file **test.json** in the **data** folder.
+
 If for some reason you are going to run it without docker (e.g. for debugging purposes) you better install the environment before with **pipenv** like this:
 ```bash
 pip install pipenv
