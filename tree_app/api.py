@@ -14,6 +14,7 @@ def get_leaf_for_jstree(child: Dict, child_id: str) -> Dict:
         "id": child_id,
         "text": body.get("data", ""),
         "children": bool(body.get("children", False)),
+        "state": {"disabled": True} if body.get("deleted", False) else {},
     }
 
 
@@ -53,6 +54,9 @@ def cache_tree_full() -> List[Dict]:
     items_stack = []
     items_stack.extend(CacheStoredTree.get_all_roots_for_storage(cache_copy))
 
+    if not items_stack:
+        return []
+
     while items_stack:
         item_key, value = items_stack.pop().popitem()
         if "children" in value:
@@ -67,6 +71,8 @@ def cache_tree_full() -> List[Dict]:
 
         value["id"] = item_key
         value["text"] = value["data"]
+        if value.get("deleted", False):
+            value["state"] = {"disabled": True}
         del value["data"]
 
     return list(cache_copy.values())

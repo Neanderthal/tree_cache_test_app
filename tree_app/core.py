@@ -21,12 +21,24 @@ class DatabaseStoredTree:
         self._initial_data = initial_data
         self._db = copy.deepcopy(initial_data)
 
+    def _populate_deleted(self, data: Dict[str, Dict]) -> None:
+        delete_stack: List = []
+
+        deleted_ids: List[str] = [key for key, value in data.items() if value.get("deleted", False)]
+        delete_stack.extend(deleted_ids)
+
+        while delete_stack:
+            item = delete_stack.pop()
+            self._db[item]["deleted"] = True
+            delete_stack.extend(self._db[item]["children"])
+
     def get_leaf(self, position: str) -> Dict[str, Dict]:
         return {position: self._db[position]}
 
     def update_db(self, data: Dict[str, Dict]) -> None:
         for key, item in data.items():
             self._db[key] = item
+        self._populate_deleted(data)
 
     def get_new_id(self) -> str:
         while True:
@@ -107,10 +119,7 @@ class CacheStoredTree:
         Returns:
             Dict[str, Dict]
         """
-        cache_copy = {
-            key: value for key, value in copy.deepcopy(self._cache).items() if not value.get("deleted", False)
-        }
-        return cache_copy
+        return copy.deepcopy(self._cache)
 
     def flush_data_to_db(self) -> None:
         self._database.update_db(self._cache)
@@ -128,7 +137,7 @@ class CacheStoredTree:
             children = cached_items_ids.intersection(item["children"])
             keys_set.difference_update(children)
 
-        result: List[Dict] = [{key: storage[key]} for key in keys_set if not storage[key].get("deleted", False)]
+        result: List[Dict] = [{key: storage[key]} for key in keys_set]
         return result
 
 

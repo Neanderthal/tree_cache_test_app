@@ -1,6 +1,11 @@
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
-
+$(() => {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+})
 // Init left tree
 $(() => {
     $('#left_tree').jstree({
@@ -45,6 +50,7 @@ $(() => {
     });
   });
 });
+
 // DELETE NODE
 $(() => {
   $('#delete_button').on('click', () => {
@@ -105,6 +111,7 @@ $(() => {
     }
   });
 });
+
 // FLUSH TREE
 $(() => {
   $('#flush_button').on('click', () => {
@@ -124,6 +131,7 @@ $(() => {
     });
   });
 });
+
 // RESET CACHE TREE
 $(() => {
   $('#reset_button').on('click', () => {
@@ -150,10 +158,12 @@ $(() => {
   $('#edit_button').on('click', () => {
     const left_tree = $('#left_tree').jstree(true);
     const selected_node = left_tree.get_selected(true)[0];
-    $('#edit_data').val(selected_node.text)
-    $('#edit_data').attr("data", selected_node.id);
+    if(selected_node !== undefined){
+      $('#edit_data').val(selected_node.text)
+      $('#edit_data').attr("data", selected_node.id);
 
-    $('#edit_data').addClass("show")
+      $('#edit_data').addClass("show")
+    }
   });
 });
 
