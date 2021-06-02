@@ -43,6 +43,10 @@ class DatabaseStoredTree:
 
         self._populate_deleted(data)
 
+        # Back update
+        for key, item in data.items():
+            item["deleted"] = self._db[key]["deleted"]
+
     def get_new_id(self) -> str:
         while True:
             rundom_id = str(uuid4())
