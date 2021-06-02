@@ -37,7 +37,10 @@ class DatabaseStoredTree:
 
     def update_db(self, data: Dict[str, Dict]) -> None:
         for key, item in data.items():
-            self._db[key] = item
+            if item.get("deleted", False):
+                item["data"] = self._db[key]["data"]
+            self._db[key] = copy.deepcopy(item)
+
         self._populate_deleted(data)
 
     def get_new_id(self) -> str:
@@ -63,6 +66,20 @@ class CacheStoredTree:
         self._cache: Dict = {}
         self._database = database
 
+    def _populate_deleted(self, keys_to_delete: List[str]) -> None:
+        """[summary]
+            In order to delete all children, I used the list type in a stack-like manner
+        Args:
+            leaf_key (str)
+        """
+        delete_stack: List = keys_to_delete
+        cached_items_ids: Set = set(self._cache.keys())
+
+        while delete_stack:
+            child = delete_stack.pop()
+            self._cache[child]["deleted"] = True
+            delete_stack.extend(cached_items_ids.intersection(self._cache[child]["children"]))
+
     def get_leaf(self, key: str) -> Union[Dict, None]:
         item: Optional[Dict] = self._cache.get(key, None)
         if item and not item.get("deleted", False):
@@ -80,7 +97,8 @@ class CacheStoredTree:
         return self.get_all_roots_for_storage(storage)
 
     def load_leaf_to_cache(self, key: str) -> None:
-        self._cache.update(self._database.get_leaf(key))
+        self._cache.update(copy.deepcopy(self._database.get_leaf(key)))
+        self._populate_deleted([key for key, value in self._cache.items() if value.get("deleted", False)])
 
     def insert_leaf(self, parent: str, data: str) -> str:
         if not self._cache[parent].get("deleted", False):
@@ -96,23 +114,9 @@ class CacheStoredTree:
             self._cache[leaf_key]["data"] = data
 
     def delete(self, leaf_key: str) -> None:
-        """[summary]
-            In order to delete all children, I used the list type in a stack-like manner
-        Args:
-            leaf_key (str)
-        """
-        delete_stack: List = []
+        self._populate_deleted([leaf_key])
 
-        self._cache[leaf_key]["deleted"] = True
-        cached_items_ids: Set = set(self._cache.keys())
-        delete_stack.extend(cached_items_ids.intersection(self._cache[leaf_key]["children"]))
-
-        while delete_stack:
-            child = delete_stack.pop()
-            self._cache[child]["deleted"] = True
-            delete_stack.extend(cached_items_ids.intersection(self._cache[child]["children"]))
-
-    def get_copy_except_deleted(self) -> Dict[str, Dict]:
+    def get_cache_copy(self) -> Dict[str, Dict]:
         """[summary]
             To convert data to format that jstree library use to show tree
             I make a copy of the cache structure.

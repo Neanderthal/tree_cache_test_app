@@ -49,7 +49,7 @@ def cache_tree_full() -> List[Dict]:
     Returns:
         List[Dict]
     """
-    cache_copy = cache.get_copy_except_deleted()
+    cache_copy = cache.get_cache_copy()
 
     items_stack = []
     items_stack.extend(CacheStoredTree.get_all_roots_for_storage(cache_copy))
