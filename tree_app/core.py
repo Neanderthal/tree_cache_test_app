@@ -45,7 +45,7 @@ class DatabaseStoredTree:
 
         # Back update
         for key, item in data.items():
-            item["deleted"] = self._db[key]["deleted"]
+            item["deleted"] = self._db[key].get("deleted", False)
 
     def get_new_id(self) -> str:
         while True:
